@@ -1,0 +1,55 @@
+name = "Hindmarsh Rose v2 C++"
+kind = "hindmarsh_rose_v2_cpp"
+version = "0.1.0"
+description = "Hindmarsh-Rose v2 plugin with C++."
+library = "hindmarsh-rose-v2-cpp.so"
+supports_start_stop = true
+supports_restart = true
+
+[[inputs]]
+name = "i_syn"
+
+[[outputs]]
+name = "x"
+
+[[outputs]]
+name = "y"
+
+[[outputs]]
+name = "z"
+
+[[variables]]
+name = "x"
+default = -0.9013747551021072
+
+[[variables]]
+name = "y"
+default = -3.15948829665501
+
+[[variables]]
+name = "z"
+default = 3.247826955037619
+
+[[variables]]
+name = "e"
+default = 3.25
+
+[[variables]]
+name = "mu"
+default = 0.006
+
+[[variables]]
+name = "s"
+default = 4.0
+
+[[variables]]
+name = "vh"
+default = 1.0
+
+[[variables]]
+name = "time_increment"
+default = 0.0015
+
+[[variables]]
+name = "burst_duration"
+default = 1.0

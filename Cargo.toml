@@ -1,0 +1,14 @@
+[package]
+name = "hindmarsh-rose-v2-cpp"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+rtsyn_plugin = { git = "https://github.com/rtsyn-dev/rtsyn-plugin" }
+serde_json = "1"
+
+[build-dependencies]
+cc = "1.0"
