@@ -63,12 +63,13 @@ extern "C" void hr_set_input(hr_state_cpp_t *state, const char *name,
 }
 
 extern "C" void hr_process(hr_state_cpp_t *state) {
+  // Limit steps for real-time performance
   size_t steps = state->s_points;
   if (steps == 0) {
     steps = 1;
   }
-  if (steps > 10000) {
-    steps = 10000;
+  if (steps > 50) { // Hard limit for real-time performance
+    steps = 50;
   }
   for (size_t step = 0; step < steps; ++step) {
     double vars[3] = {state->x, state->y, state->z};
@@ -141,21 +142,26 @@ static void update_burst_settings(hr_state_cpp_t *state) {
     state->s_points = 1;
     return;
   }
-  double freq = 1.0 / state->period_seconds;
+  
+  // For real-time performance, limit integration steps regardless of frequency
   if (state->burst_duration > 0.0) {
-    double pts_burst = set_pts_burst(state->burst_duration, freq, &state->dt);
-    size_t s_points =
-        (size_t)llround(pts_burst / (state->burst_duration * freq));
-    if (s_points == 0) {
-      s_points = 1;
-    }
-    state->s_points = s_points;
+    // Use fixed steps for burst mode to ensure consistent performance
+    state->s_points = 1;
   } else {
-    size_t steps = (size_t)llround(state->period_seconds / state->dt);
-    if (steps == 0) {
-      steps = 1;
+    // Limit steps to maintain real-time performance
+    const size_t max_steps = 10; // Maximum steps per tick for real-time performance
+    size_t desired_steps = (size_t)llround(state->period_seconds / state->dt);
+    if (desired_steps == 0) {
+      desired_steps = 1;
     }
-    state->s_points = steps;
+    
+    if (desired_steps > max_steps) {
+      // Adapt dt to maintain step count instead of increasing steps
+      state->dt = state->period_seconds / max_steps;
+      state->s_points = max_steps;
+    } else {
+      state->s_points = desired_steps;
+    }
   }
 }
 
