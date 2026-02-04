@@ -116,12 +116,18 @@ extern "C" fn set_input(handle: *mut c_void, name: *const u8, len: usize, value:
     }
 }
 
-extern "C" fn process(handle: *mut c_void, _tick: u64) {
+extern "C" fn process(handle: *mut c_void, _tick: u64, period_seconds: f64) {
     if handle.is_null() {
         return;
     }
+    let state = handle as *mut HrStateCpp;
+    
+    // Update period_seconds from runtime to respect workspace settings
     unsafe {
-        hr_process(handle as *mut HrStateCpp);
+        if ((*state).period_seconds - period_seconds).abs() > f64::EPSILON {
+            hr_set_config(state, b"period_seconds".as_ptr(), 14, period_seconds);
+        }
+        hr_process(state);
     }
 }
 
