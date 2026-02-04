@@ -13,7 +13,7 @@ extern "C" void hr_init(hr_state_cpp_t *state) {
   state->mu = 0.006;
   state->s = 4.0;
   state->vh = 1.0;
-  state->dt = 0.0015;
+  state->dt = 0.15;
   state->burst_duration = 1.0;
   state->period_seconds = 0.001;
   state->s_points = 1;
@@ -41,8 +41,6 @@ extern "C" void hr_set_config(hr_state_cpp_t *state, const char *key,
     state->s = value;
   } else if (len == 2 && strncmp(key, "vh", len) == 0) {
     state->vh = value;
-  } else if (len == 14 && strncmp(key, "time_increment", len) == 0) {
-    state->dt = value < 0.0 ? 0.0 : value;
   } else if (len == 14 && strncmp(key, "burst_duration", len) == 0) {
     state->burst_duration = value;
   } else if (len == 14 && strncmp(key, "period_seconds", len) == 0) {
@@ -139,6 +137,10 @@ static void update_burst_settings(hr_state_cpp_t *state) {
     return;
   }
 
+  // Calculate optimal dt using RTXI-compatible algorithm
+  double pts_burst = select_pts_burst(state->burst_duration, state->period_seconds);
+  state->dt = select_optimal_dt(pts_burst);
+
   // For real-time performance, limit integration steps regardless of frequency
   if (state->burst_duration > 0.0) {
     // Use fixed steps for burst mode to ensure consistent performance
@@ -160,4 +162,28 @@ static void update_burst_settings(hr_state_cpp_t *state) {
       state->s_points = desired_steps;
     }
   }
+}
+
+double select_optimal_dt(double pts_match) {
+  const double dts[] = {0.0005, 0.001, 0.0015, 0.002, 0.003, 0.005, 0.01, 0.015, 0.02, 0.03, 0.05, 0.1};
+  const double pts[] = {577638.0, 286092.5, 189687.0, 142001.8, 94527.4, 56664.4, 28313.6, 18381.1, 14223.2, 9497.0, 5716.9, 2829.7};
+  const size_t n = sizeof(dts) / sizeof(dts[0]);
+  
+  size_t best_idx = 0;
+  double best_diff = std::abs(pts[0] - pts_match);
+  
+  for (size_t i = 1; i < n; i++) {
+    double diff = std::abs(pts[i] - pts_match);
+    if (diff < best_diff) {
+      best_diff = diff;
+      best_idx = i;
+    }
+  }
+  
+  return dts[best_idx];
+}
+
+double select_pts_burst(double burst_duration, double period_seconds) {
+  if (period_seconds <= 0.0) return 1.0;
+  return burst_duration / period_seconds;
 }

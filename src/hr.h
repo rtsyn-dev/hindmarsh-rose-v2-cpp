@@ -27,4 +27,6 @@ void hr_set_config(hr_state_cpp_t *state, const char *key, size_t len,
 void hr_set_input(hr_state_cpp_t *state, const char *name, size_t len,
                   double value);
 void hr_process(hr_state_cpp_t *state);
+double select_optimal_dt(double pts_match);
+double select_pts_burst(double sec_per_burst, double freq);
 }
